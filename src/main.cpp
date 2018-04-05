@@ -8,8 +8,8 @@ LiquidCrystal_I2C lcd(0x3F, 16, 2); // инициализируем диспле
 Servo servo;
 char key;
 String str_pass = "";
-int i, int_pass, my_array[2] = {1234, 4321};
-unsigned long pass_timer, time;
+int i, int_pass, my_array[2] = {1234, 4321}, soundPin = 7;
+unsigned long pass_timer;
 
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -26,13 +26,14 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS ); //ин
 
 void setup() {
   Serial.begin(9600);
-  servo.attach(11);// привязываем сервопривод к аналоговому выходу 0
+  servo.attach(11);                  // привязываем сервопривод к аналоговому выходу 11
   lcd.init();
-  lcd.backlight();// Включаем подсветку дисплея
-  servo.write(7);
+  lcd.backlight();                   // Включаем подсветку дисплея
+  servo.write(100);                  // изначально замок закрыт
+  pinMode(soundPin, OUTPUT);
 }
 
-int arrayIncludeElement(int my_array[], int int_pass) {
+int arrayIncludeElement(int my_array[], int int_pass) { // функция проверки: идет по массиву и сравнивает значения ввода со значениями в массиве
   for (i = 0; i < 2; i++) {
     if (my_array[i] == int_pass) {   //проверяем, что ввели
       return my_array[i];
@@ -40,13 +41,21 @@ int arrayIncludeElement(int my_array[], int int_pass) {
   }
   return 0;
 }
+
+void sound() {                      //функция звука
+  tone(soundPin, 700);
+  delay(80);
+  noTone(soundPin);
+}
+
 void pass_check() {
   lcd.setCursor(0, 0);
   lcd.print("Press * for strt");
   lcd.setCursor(0, 1);
   lcd.print("Press # for end");
   key = keypad.getKey();                 // обработка нажатия
-  if (key == '*') {                      // если была нажата *
+  if (key == '*') {
+    sound();
     lcd.clear();                         // отчищаем дисплей
     pass_timer = millis();               // сбросить таймер
     while (1) {                          // бесконечный цикл
@@ -54,15 +63,16 @@ void pass_check() {
       if (key != NO_KEY) {               // если была нажата
         pass_timer = millis();           // сбросить таймер
         if (key == '#') {
-          int_pass = str_pass.toInt();   // если нажата *
+          sound();
+          int_pass = str_pass.toInt();   // если нажата #
           break;                         // выйти из цикла
         }
-        else if (key == '*') {           // если нажата #
+        else if (key == '*') {           // если нажата *
           str_pass = "";                 // начать ввод сначала
         }
         else {                           // если * не нажата
+          sound();
           str_pass += key;               // прибавить нажатую цифру к паролю
-
         }
       }
       if (millis() - pass_timer > 10000) {     // если сработал таймер
@@ -74,22 +84,21 @@ void pass_check() {
       lcd.setCursor(6, 0);
       lcd.print("Open");
       Serial.println("Open");
-      servo.write(111);
-      delay(3000);
+      servo.write(5);
+      delay(1500);
     }
     else if (arrayIncludeElement(my_array, int_pass) == 4321) {
       lcd.setCursor(6, 0);
       lcd.print("Close");
       Serial.println("Close");
-      servo.write(5);
-      delay(2000);
+      servo.write(101);
+      delay(1500);
     }
     else {
       lcd.setCursor(5, 0);
       lcd.print("Error!");
       Serial.println("Error!");
       lcd.setCursor(3, 1);
-      //lcd.print(int_pass);
       lcd.print("Wrong code");
       delay(2000);
     }
