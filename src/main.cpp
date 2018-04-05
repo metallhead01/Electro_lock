@@ -74,14 +74,14 @@ void pass_check() {
       lcd.setCursor(6, 0);
       lcd.print("Open");
       Serial.println("Open");
-      servo.write(160);
+      servo.write(111);
       delay(3000);
     }
     else if (arrayIncludeElement(my_array, int_pass) == 4321) {
       lcd.setCursor(6, 0);
       lcd.print("Close");
       Serial.println("Close");
-      servo.write(7);
+      servo.write(5);
       delay(2000);
     }
     else {
